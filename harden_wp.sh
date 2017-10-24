@@ -10,24 +10,33 @@ clear
 
 echo "Run this script at the root of your wordpress install!"
 echo " "
-echo "Type user (commonly www-data or nginx) web runs as?"
-read serverUser
+read -p "Enter user your web server runs as, i.e.: www-data or nginx (nginx): " serverUser
+serverUser=${serverUser:-nginx}
 echo " "
-echo "Type your user account name:"
-read userAccount
+read -p "Your user account name ($SUDO_USER): " userAccount
+userAccount=${userAccount:-$SUDO_USER}
+
+echo " "
+read -e -p "Path to WordPress ($PWD): " wordpressPath
+wordpressPath=${wordpressPath:-$PWD}
+wordpressPath=${wordpressPath%/}
+if [ ! -f "$wordpressPath/wp-config.php" ]; then
+	echo "Script exiting because could not find \"$wordpressPath/wp-config.php\"... i.e.: does not look like valid WordPress install."
+	exit
+fi
 
 echo " "
 echo "Choose option below:"
-read -p "Enter [1] to harden or 2 to loose:" harden
+read -p "Enter 1 to harden or 2 to loose (1): " harden
 harden=${harden:-"1"}
 
 if [ $harden -eq "2" ]
 then
-	chown $serverUser:$serverUser -R $PWD  #Let serverAccount be owner (usefull for upgrading/theme changes... I did this during some the7 changes)
+	chown $serverUser:$serverUser -R $wordpressPath  #Let serverAccount be owner (usefull for upgrading/theme changes... I did this during some the7 changes)
 else
-	find . -type d -exec chmod 755 {} \;  # Change directory permissions rwxr-xr-x
-	find . -type f -exec chmod 644 {} \;  # Change file permissions rw-r--r--
-	chown $userAccount:$userAccount  -R ./ # Let your useraccount be owner
-	chown $serverUser:$serverUser -R wp-content/ # Let apache be owner of wp-content
-	chown $userAccount:$userAccount  -R wp-content/plugins/ # Let your useraccount be owner
+	find $wordpressPath -type d -exec chmod 755 {} \; # Change directory permissions rwxr-xr-x
+	find $wordpressPath -type f -exec chmod 644 {} \;  # Change file permissions rw-r--r--
+	chown $userAccount:$userAccount  -R $wordpressPath # Let your useraccount be owner
+	chown $serverUser:$serverUser -R "$wordpressPath/wp-content/" # Let apache be owner of wp-content
+	chown $userAccount:$userAccount  -R "$wordpressPath/wp-content/plugins/" # Let your useraccount be owner
 fi
