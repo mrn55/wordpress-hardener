@@ -1,5 +1,7 @@
 # wordpress-hardener
 
+## Archived!!!
+
 As the script will tell you, run it at the root of your WordPress install. You can choose to harden or loosen the permissions, basically this allows WordPress to update itself or install a plugin. If you have insights on better ways of handling this kind of stuff, let me know!
 
 ```
